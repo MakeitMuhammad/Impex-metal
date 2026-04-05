@@ -81,10 +81,10 @@ nav.scrolled{background:rgba(14,14,14,0.96);border-bottom-color:var(--bdr);backd
 .clbl{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
 .cdiv{width:1px;height:48px;background:var(--bdr)}
 .bs{background:var(--dark);padding:100px 60px}
-.bgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--bdr);margin-top:44px;min-height:180px}
-.bph{background:var(--dark3);aspect-ratio:4/3;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px}
-.bph img{width:100%;height:100%;object-fit:cover;display:block}
-.bempty{padding:60px;text-align:center;color:var(--muted);font-size:13px;border:1px dashed var(--bdr);grid-column:1/-1}
+.bgrid{columns:3;column-gap:10px;margin-top:44px}
+.bph{background:var(--dark3);border:1px solid var(--bdr);break-inside:avoid;margin-bottom:10px;overflow:hidden;display:block}
+.bph img{width:100%;height:auto;display:block;object-fit:contain;vertical-align:top}
+.bempty{padding:60px;text-align:center;color:var(--muted);font-size:13px;border:1px dashed var(--bdr)}
 .ts{background:var(--dark2);padding:100px 60px}
 .tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:56px;background:var(--bdr)}
 .tc{background:var(--dark2);padding:38px 30px;transition:background 0.3s}
@@ -144,13 +144,16 @@ footer{background:var(--dark);border-top:1px solid var(--bdr);padding:36px 60px;
 .aupl span{color:var(--gold);font-size:15px}
 #perr{color:var(--red);font-size:11px;margin-top:6px;display:none}
 .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--dark);padding:8px 20px;font-size:12px;font-weight:500;z-index:99999}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(201,168,76,0.3);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:768px){
   nav{padding:14px 22px}.nlinks{display:none}
   .hero{padding:0 22px 56px}.hstats,.hwm{display:none}
   .as,.ps,.ms,.bs,.ts,.cns{padding:56px 22px}
   .cs{padding:36px 22px}
   .agrid,.mgrid,.tgrid,.cngrid,.frow{grid-template-columns:1fr}
-  .pgrid,.fgrid,.bgrid{grid-template-columns:1fr}
+  .pgrid,.fgrid{grid-template-columns:1fr}
+  .bgrid{columns:1}
   footer{flex-direction:column;gap:14px;text-align:center;padding:28px 22px}
   .cdiv{display:none}
 }
@@ -240,11 +243,11 @@ footer{background:var(--dark);border-top:1px solid var(--bdr);padding:36px 60px;
   <h2 class="st">Our Products</h2>
   <div style="margin-top:44px">
     <div class="subl">Non-Ferrous</div>
-    <div class="pgrid" id="nfgrid"></div>
+    <div class="pgrid" id="nfgrid"><div class="pc" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:13px;"><span class="spin"></span> Loading...</div></div>
   </div>
   <div style="margin-top:44px">
     <div class="subl">Ferrous</div>
-    <div class="fgrid" id="fgrid"></div>
+    <div class="fgrid" id="fgrid"><div class="pc" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:13px;"><span class="spin"></span> Loading...</div></div>
   </div>
 </section>
 
@@ -285,7 +288,7 @@ footer{background:var(--dark);border-top:1px solid var(--bdr);padding:36px 60px;
   <div class="sl">BIR &amp; ISRI</div>
   <h2 class="st">Meetings &amp; Memories</h2>
   <p style="font-size:14px;color:var(--muted);max-width:520px;line-height:1.7">Building relations and making friends never gets boring. We attend BIR and ISRI international conventions to stay connected with the global recycling community.</p>
-  <div class="bgrid" id="birgrid"></div>
+  <div class="bgrid" id="birgrid"><div class="bempty"><span class="spin"></span> Loading photos...</div></div>
 </section>
 
 <section class="ts" id="team">
@@ -362,7 +365,7 @@ footer{background:var(--dark);border-top:1px solid var(--bdr);padding:36px 60px;
       <div class="asec">
         <div class="aslbl">BIR &amp; ISRI Photos</div>
         <div id="abirlist"></div>
-        <label class="aupl"><span>+</span>&nbsp;Add Photos<input type="file" accept="image/*" multiple style="display:none;" onchange="addPhotos(this)"></label>
+        <label class="aupl"><span>+</span>&nbsp;Upload Photos (stored on Supabase)<input type="file" accept="image/*" multiple style="display:none;" onchange="addPhotos(this)"></label>
       </div>
       <div class="asec">
         <div class="aslbl">Non-Ferrous Products</div>
@@ -380,192 +383,308 @@ footer{background:var(--dark);border-top:1px solid var(--bdr);padding:36px 60px;
           <button class="abtn" onclick="addProd(1)">Add</button>
         </div>
       </div>
-      <button class="absv" onclick="saveAll()">Save and Apply Changes</button>
     </div>
   </div>
 </div>
 
 <script>
 
+var SURL = 'https://uyvoqaqymfxxxplvgjiu.supabase.co';
+var SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5dm9xYXF5bWZ4eHhwbHZnaml1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTY2MTcsImV4cCI6MjA5MDk3MjYxN30.sFudWaJnqf15bpqPbU0KhDdwu7cfwHU83NuYxolIUNU';
+var BUCKET = 'bir-photos';
 var PASS = 'impex2026';
 var clicks = 0;
 
 var DEFAULT_NF = [
-  {n:'Electric Motors Scrap', t:'BIR Grade'},
-  {n:'Sealed Unit / Mix Compressor', t:'High Volume'},
-  {n:'E-Scrap', t:'Certified'},
-  {n:'Aluminium Scrap and Cable', t:'All Grades'},
-  {n:'Zinc and Aluminium Ingots', t:'LME Grade'},
-  {n:'Alternator, Starter and Transformer', t:'Automotive'}
+  {name:'Electric Motors Scrap', category:'nf', tag:'BIR Grade'},
+  {name:'Sealed Unit / Mix Compressor', category:'nf', tag:'High Volume'},
+  {name:'E-Scrap', category:'nf', tag:'Certified'},
+  {name:'Aluminium Scrap and Cable', category:'nf', tag:'All Grades'},
+  {name:'Zinc and Aluminium Ingots', category:'nf', tag:'LME Grade'},
+  {name:'Alternator, Starter and Transformer', category:'nf', tag:'Automotive'}
 ];
 
 var DEFAULT_F = [
-  {n:'Shredded Steel Scrap', t:'ISRI 210/211'},
-  {n:'HMS 1/2 80:20', t:'BIR Grade'},
-  {n:'Rail Scrap', t:'R65 R55'},
-  {n:'Steel Bundles', t:'Full Container'}
+  {name:'Shredded Steel Scrap', category:'f', tag:'ISRI 210/211'},
+  {name:'HMS 1/2 80:20', category:'f', tag:'BIR Grade'},
+  {name:'Rail Scrap', category:'f', tag:'R65 R55'},
+  {name:'Steel Bundles', category:'f', tag:'Full Container'}
 ];
 
-function gs(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
-function ss(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+var photos = [];
+var nfList = [];
+var fList = [];
 
-var photos=gs('imo_bir',[]);
-var nfList=gs('imo_nf',DEFAULT_NF);
-var fList=gs('imo_f',DEFAULT_F);
+function sbFetch(path, opts) {
+  var headers = {
+    'apikey': SKEY,
+    'Authorization': 'Bearer ' + SKEY
+  };
+  if (opts && opts.headers) {
+    for (var k in opts.headers) { headers[k] = opts.headers[k]; }
+  }
+  return fetch(SURL + path, {
+    method: (opts && opts.method) ? opts.method : 'GET',
+    headers: headers,
+    body: (opts && opts.body) ? opts.body : undefined
+  });
+}
 
-document.getElementById('atrig').addEventListener('click',function(){
+function loadPhotos() {
+  sbFetch('/storage/v1/object/list/' + BUCKET, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({limit: 100, offset: 0, prefix: ''})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(files) {
+    if (!Array.isArray(files)) { renderBir([]); return; }
+    photos = files.filter(function(f){ return f.name && f.name !== '.emptyFolderPlaceholder'; });
+    renderBir(photos);
+  })
+  .catch(function(){ renderBir([]); });
+}
+
+function loadProducts() {
+  sbFetch('/rest/v1/products?select=*&order=id.asc')
+  .then(function(r){ return r.json(); })
+  .then(function(rows) {
+    if (!Array.isArray(rows) || rows.length === 0) {
+      insertDefaultProducts();
+      return;
+    }
+    nfList = rows.filter(function(r){ return r.category === 'nf'; });
+    fList  = rows.filter(function(r){ return r.category === 'f'; });
+    renderProds();
+  })
+  .catch(function(){
+    nfList = DEFAULT_NF;
+    fList = DEFAULT_F;
+    renderProds();
+  });
+}
+
+function insertDefaultProducts() {
+  var all = DEFAULT_NF.concat(DEFAULT_F);
+  sbFetch('/rest/v1/products', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Prefer': 'return=representation'},
+    body: JSON.stringify(all)
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(rows){
+    if (Array.isArray(rows)) {
+      nfList = rows.filter(function(r){ return r.category === 'nf'; });
+      fList  = rows.filter(function(r){ return r.category === 'f'; });
+    } else {
+      nfList = DEFAULT_NF; fList = DEFAULT_F;
+    }
+    renderProds();
+  })
+  .catch(function(){ nfList = DEFAULT_NF; fList = DEFAULT_F; renderProds(); });
+}
+
+function photoURL(name) {
+  return SURL + '/storage/v1/object/public/' + BUCKET + '/' + encodeURIComponent(name);
+}
+
+document.getElementById('atrig').addEventListener('click', function() {
   clicks++;
-  if(clicks>=5){clicks=0;openAdmin();}
+  if (clicks >= 5) { clicks = 0; openAdmin(); }
 });
 
-function openAdmin(){
-  document.getElementById('aov').style.display='flex';
-  document.getElementById('alog').style.display='block';
-  document.getElementById('apnl').style.display='none';
-  document.getElementById('apass').value='';
-  document.getElementById('perr').style.display='none';
+function openAdmin() {
+  document.getElementById('aov').style.display = 'flex';
+  document.getElementById('alog').style.display = 'block';
+  document.getElementById('apnl').style.display = 'none';
+  document.getElementById('apass').value = '';
+  document.getElementById('perr').style.display = 'none';
 }
 
-function closeAdmin(){
-  document.getElementById('aov').style.display='none';
+function closeAdmin() {
+  document.getElementById('aov').style.display = 'none';
 }
 
-function checkPass(){
-  if(document.getElementById('apass').value===PASS){
-    document.getElementById('alog').style.display='none';
-    document.getElementById('apnl').style.display='block';
+function checkPass() {
+  if (document.getElementById('apass').value === PASS) {
+    document.getElementById('alog').style.display = 'none';
+    document.getElementById('apnl').style.display = 'block';
     renderAdmin();
   } else {
-    document.getElementById('perr').style.display='block';
+    document.getElementById('perr').style.display = 'block';
   }
 }
 
-document.addEventListener('keydown',function(e){
-  var ov=document.getElementById('aov');
-  var lg=document.getElementById('alog');
-  if(e.key==='Enter' && ov.style.display==='flex' && lg.style.display!=='none'){checkPass();}
+document.addEventListener('keydown', function(e) {
+  var ov = document.getElementById('aov');
+  var lg = document.getElementById('alog');
+  if (e.key === 'Enter' && ov.style.display === 'flex' && lg.style.display !== 'none') { checkPass(); }
 });
 
-function renderAdmin(){
-  var bl=document.getElementById('abirlist');
-  var bh='';
-  if(photos.length===0){
-    bh='<div style="font-size:12px;color:var(--muted);padding:6px 0;margin-bottom:8px;">No photos yet.</div>';
+function renderAdmin() {
+  var bl = document.getElementById('abirlist');
+  var bh = '';
+  if (photos.length === 0) {
+    bh = '<div style="font-size:12px;color:var(--muted);padding:6px 0;margin-bottom:8px;">No photos yet.</div>';
   } else {
-    for(var i=0;i<photos.length;i++){
-      bh+='<div class="ait"><img src="'+photos[i].s+'" style="width:44px;height:33px;object-fit:cover;"><span class="aitn">'+photos[i].n+'</span><button class="arm" onclick="removePh('+i+')">REMOVE</button></div>';
+    for (var i = 0; i < photos.length; i++) {
+      bh += '<div class="ait"><img src="' + photoURL(photos[i].name) + '" style="width:44px;height:33px;object-fit:cover;"><span class="aitn">' + photos[i].name + '</span><button class="arm" onclick="deletePh(' + i + ')">REMOVE</button></div>';
     }
   }
-  bl.innerHTML=bh;
+  bl.innerHTML = bh;
 
-  var nl=document.getElementById('anflist');
-  var nh='';
-  for(var i=0;i<nfList.length;i++){
-    nh+='<div class="ait"><span class="aitn">'+nfList[i].n+'</span><span class="aitt">'+nfList[i].t+'</span><button class="arm" onclick="removeP(0,'+i+')">REMOVE</button></div>';
+  var nl = document.getElementById('anflist');
+  var nh = '';
+  for (var i = 0; i < nfList.length; i++) {
+    nh += '<div class="ait"><span class="aitn">' + nfList[i].name + '</span><span class="aitt">' + nfList[i].tag + '</span><button class="arm" onclick="deleteProd(' + (nfList[i].id || 0) + ')">REMOVE</button></div>';
   }
-  nl.innerHTML=nh;
+  nl.innerHTML = nh;
 
-  var fl=document.getElementById('aflist');
-  var fh='';
-  for(var i=0;i<fList.length;i++){
-    fh+='<div class="ait"><span class="aitn">'+fList[i].n+'</span><span class="aitt">'+fList[i].t+'</span><button class="arm" onclick="removeP(1,'+i+')">REMOVE</button></div>';
+  var fl = document.getElementById('aflist');
+  var fh = '';
+  for (var i = 0; i < fList.length; i++) {
+    fh += '<div class="ait"><span class="aitn">' + fList[i].name + '</span><span class="aitt">' + fList[i].tag + '</span><button class="arm" onclick="deleteProd(' + (fList[i].id || 0) + ')">REMOVE</button></div>';
   }
-  fl.innerHTML=fh;
+  fl.innerHTML = fh;
 }
 
-function removePh(i){photos.splice(i,1);renderAdmin();}
-function removeP(t,i){if(t===0){nfList.splice(i,1);}else{fList.splice(i,1);}renderAdmin();}
-
-function addPhotos(input){
-  var files=input.files;
-  if(!files||files.length===0)return;
-  var total=files.length;
-  var done=0;
-  for(var i=0;i<files.length;i++){
-    (function(file){
-      var r=new FileReader();
-      r.onload=function(e){
-        photos.push({s:e.target.result,n:file.name});
+function addPhotos(input) {
+  var files = input.files;
+  if (!files || files.length === 0) return;
+  var btn = document.getElementById('abirlist');
+  btn.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0;"><span class="spin"></span>Uploading...</div>';
+  var total = files.length;
+  var done = 0;
+  for (var i = 0; i < files.length; i++) {
+    (function(file) {
+      var fname = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+      sbFetch('/storage/v1/object/' + BUCKET + '/' + fname, {
+        method: 'POST',
+        headers: {'Content-Type': file.type},
+        body: file
+      })
+      .then(function() {
         done++;
-        if(done===total)renderAdmin();
-      };
-      r.readAsDataURL(file);
+        if (done === total) { loadPhotos(); setTimeout(function(){ renderAdmin(); }, 1200); }
+      })
+      .catch(function() {
+        done++;
+        if (done === total) { loadPhotos(); setTimeout(function(){ renderAdmin(); }, 1200); }
+      });
     })(files[i]);
   }
 }
 
-function addProd(t){
-  var id=t===0?'newnf':'newf';
-  var el=document.getElementById(id);
-  var v=el.value.trim();
-  if(!v)return;
-  if(t===0){nfList.push({n:v,t:'Non-Ferrous'});}else{fList.push({n:v,t:'Ferrous'});}
-  el.value='';
-  renderAdmin();
+function deletePh(i) {
+  var name = photos[i].name;
+  sbFetch('/storage/v1/object/' + BUCKET, {
+    method: 'DELETE',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({prefixes: [name]})
+  })
+  .then(function() {
+    photos.splice(i, 1);
+    renderAdmin();
+    renderBir(photos);
+    showToast('Photo removed');
+  });
 }
 
-function saveAll(){
-  ss('imo_bir',photos);
-  ss('imo_nf',nfList);
-  ss('imo_f',fList);
-  closeAdmin();
-  renderBir();
-  renderProds();
-  var t=document.createElement('div');
-  t.className='toast';
-  t.textContent='Changes saved!';
+function addProd(t) {
+  var id = t === 0 ? 'newnf' : 'newf';
+  var el = document.getElementById(id);
+  var v = el.value.trim();
+  if (!v) return;
+  var cat = t === 0 ? 'nf' : 'f';
+  var tag = t === 0 ? 'Non-Ferrous' : 'Ferrous';
+  el.value = '';
+  sbFetch('/rest/v1/products', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Prefer': 'return=representation'},
+    body: JSON.stringify({name: v, category: cat, tag: tag})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(rows) {
+    if (Array.isArray(rows) && rows.length > 0) {
+      if (cat === 'nf') { nfList.push(rows[0]); } else { fList.push(rows[0]); }
+    }
+    renderAdmin();
+    renderProds();
+    showToast('Product added');
+  });
+}
+
+function deleteProd(id) {
+  if (!id) return;
+  sbFetch('/rest/v1/products?id=eq.' + id, {
+    method: 'DELETE',
+    headers: {'Content-Type': 'application/json'}
+  })
+  .then(function() {
+    nfList = nfList.filter(function(p){ return p.id !== id; });
+    fList  = fList.filter(function(p){ return p.id !== id; });
+    renderAdmin();
+    renderProds();
+    showToast('Product removed');
+  });
+}
+
+function showToast(msg) {
+  var t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(function(){t.remove();},2400);
+  setTimeout(function(){ t.remove(); }, 2400);
 }
 
-function renderBir(){
-  var g=document.getElementById('birgrid');
-  if(!g)return;
-  if(photos.length===0){
-    g.innerHTML='<div class="bempty">No photos yet. Click bottom-right corner 5 times to open admin panel.</div>';
+function renderBir(list) {
+  var g = document.getElementById('birgrid');
+  if (!g) return;
+  if (!list || list.length === 0) {
+    g.innerHTML = '<div class="bempty">No photos yet. Click bottom-right corner 5 times to open admin panel and upload photos.</div>';
     return;
   }
-  var h='';
-  for(var i=0;i<photos.length;i++){
-    h+='<div class="bph"><img src="'+photos[i].s+'" alt="BIR"></div>';
+  var h = '';
+  for (var i = 0; i < list.length; i++) {
+    h += '<div class="bph"><img src="' + photoURL(list[i].name) + '" alt="BIR Convention" loading="lazy"></div>';
   }
-  g.innerHTML=h;
+  g.innerHTML = h;
 }
 
-function renderProds(){
-  var ng=document.getElementById('nfgrid');
-  var fg=document.getElementById('fgrid');
-  if(ng){
-    var h='';
-    for(var i=0;i<nfList.length;i++){
-      h+='<div class="pc"><div class="pico">'+(i+1)+'</div><div class="pnm">'+nfList[i].n+'</div><div class="ptg">'+nfList[i].t+'</div></div>';
+function renderProds() {
+  var ng = document.getElementById('nfgrid');
+  var fg = document.getElementById('fgrid');
+  if (ng) {
+    var h = '';
+    for (var i = 0; i < nfList.length; i++) {
+      h += '<div class="pc"><div class="pico">' + (i+1) + '</div><div class="pnm">' + nfList[i].name + '</div><div class="ptg">' + nfList[i].tag + '</div></div>';
     }
-    ng.innerHTML=h;
+    ng.innerHTML = h;
   }
-  if(fg){
-    var h='';
-    for(var i=0;i<fList.length;i++){
-      h+='<div class="pc"><div class="pico">'+(i+1)+'</div><div class="pnm">'+fList[i].n+'</div><div class="ptg">'+fList[i].t+'</div></div>';
+  if (fg) {
+    var h = '';
+    for (var i = 0; i < fList.length; i++) {
+      h += '<div class="pc"><div class="pico">' + (i+1) + '</div><div class="pnm">' + fList[i].name + '</div><div class="ptg">' + fList[i].tag + '</div></div>';
     }
-    fg.innerHTML=h;
+    fg.innerHTML = h;
   }
 }
 
-window.addEventListener('scroll',function(){
-  document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>50);
+window.addEventListener('scroll', function() {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
 });
 
-var obs=new IntersectionObserver(function(entries){
-  for(var i=0;i<entries.length;i++){
-    if(entries[i].isIntersecting)entries[i].target.classList.add('visible');
+var obs = new IntersectionObserver(function(entries) {
+  for (var i = 0; i < entries.length; i++) {
+    if (entries[i].isIntersecting) entries[i].target.classList.add('visible');
   }
-},{threshold:0.1});
+}, {threshold: 0.1});
 
-var els=document.querySelectorAll('.fu');
-for(var i=0;i<els.length;i++){obs.observe(els[i]);}
+var els = document.querySelectorAll('.fu');
+for (var i = 0; i < els.length; i++) { obs.observe(els[i]); }
 
-renderBir();
-renderProds();
+loadPhotos();
+loadProducts();
 
 </script>
 </body>
